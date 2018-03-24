@@ -8,12 +8,12 @@ void outPut_QInt(QInt x)
 {
 	//Thập phân
 	string Dec = ByteToDec(x);
-	cout << "DEC" << endl;
+	cout << "DEC  ";
 	cout << Dec << "    " << endl << endl;
 
 	//Thập lục phân
 	char* Hex = ByteToHex(x);
-	cout << "HEX" << endl;
+	cout << "HEX  ";
 	if (Hex)
 	{
 		for (int i = 0; i < 32; i++)
@@ -29,7 +29,7 @@ void outPut_QInt(QInt x)
 
 	//Nhị phân
 	bool* Bin = ByteToBin(x);
-	cout << endl << endl << "BIN" << endl;
+	cout << endl << endl << "BIN  ";
 	if (Bin)
 	{
 		for (int i = 0; i < 128; i++)
@@ -42,7 +42,7 @@ void outPut_QInt(QInt x)
 	}
 	else
 		cout << "overflow";
-	cout << endl << endl;
+	cout << endl << endl << endl;
 }
 
 // Xử lý theo tham số dòng lệnh cmd
@@ -54,8 +54,15 @@ int main(int argc, char **argv)
 	QInt A = DecToByte(a);
 	QInt B = DecToByte(b);
 
-	cout << a << " * " << b << " =" << endl << endl;
-	outPut_QInt(A * B);
+	cout << "a = " << a << endl << endl;
+	outPut_QInt(A);
+
+	cout << "b = " << b << endl << endl;
+	outPut_QInt(B);
+
+	int shift = 2;
+	cout << b << " >> " << shift << " =" << endl << endl;
+	outPut_QInt(B >> shift);
 	// END test
 
 	_getch();

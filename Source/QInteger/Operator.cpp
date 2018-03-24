@@ -141,3 +141,54 @@ QInt operator / (QInt a, QInt b)
 		a = Minus(a);
 	return a;
 }
+
+// Phép dịch trái
+QInt operator << (QInt a, int shift)
+{
+	bool sign = getBit(a.data[0], 7);			// lấy giá trị bit dấu
+	int _borrow = 0, _return = 0;
+	for (int i = 0; i < shift; i++)				// mỗi lần dịch trái 1 bit
+	{
+		for (int j = Base - 1; j >= 0; j--)		// dịch trái từng phần tử (8 bits) của QInt từ sau lên trước
+		{
+			if (a.data[j] > 127)				// nếu bit đầu của phần tử là bit 1 thì nhớ 1 để cộng vào phần tử đằng trước
+				_borrow = 1;
+			else
+				_borrow = 0;
+			a.data[j] = (a.data[j] << 1) + _return;
+			_return = _borrow;
+		}
+	}
+	if (sign == true && a.data[0] <= 127)			// khôi phục giá trị của bit dấu
+		a.data[0] = a.data[0] + 128;
+	else if (sign == false && a.data[0] > 127)
+		a.data[0] = a.data[0] - 128;
+	return a;
+}
+
+// Phép dịch phải
+QInt operator >> (QInt a, int shift)
+{
+	bool sign = getBit(a.data[0], 7);
+	int _borrow = 0;
+	int _return;
+
+	for (int i = 0; i < shift; i++)				// mỗi lần dịch phải 1 bit
+	{
+		if (sign == true)
+			_return = 128;
+		else
+			_return = 0;
+
+		for (int j = 0; j < Base; j++)			// dịch phải từng phần tử (8 bits) của QInt từ trước ra sau
+		{
+			if (a.data[j] % 2 != 0)
+				_borrow = 128;
+			else
+				_borrow = 0;
+			a.data[j] = (a.data[j] >> 1) + _return;
+			_return = _borrow;
+		}
+	}
+	return a;
+}
