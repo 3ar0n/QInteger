@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <conio.h>
 #include <windows.h>
+#include <fstream>
+#include <sstream>
+#include <vector>
 using namespace std;
 
 #define Base (int)16

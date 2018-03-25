@@ -48,23 +48,29 @@ void outPut_QInt(QInt x)
 // Xử lý theo tham số dòng lệnh cmd
 int main(int argc, char **argv)
 {
-	// test giá trị (giả sử chuỗi nhập vào và các phép tính đều hợp lệ - không cần kiểm tra)
-	string a = "1234567890";
-	string b = "-123456789";
-	QInt A = DecToByte(a);
-	QInt B = DecToByte(b);
+	//// test giá trị (giả sử chuỗi nhập vào và các phép tính đều hợp lệ - không cần kiểm tra)
+	//string a = "1234567890";
+	//string b = "-123456789";
+	//QInt A = DecToByte(a);
+	//QInt B = DecToByte(b);
 
-	cout << "a = " << a << endl << endl;
-	outPut_QInt(A);
+	//cout << "a = " << a << endl << endl;
+	//outPut_QInt(A);
 
-	cout << "b = " << b << endl << endl;
-	outPut_QInt(B);
+	//cout << "b = " << b << endl << endl;
+	//outPut_QInt(B);
 
-	int shift = 2;
-	cout << b << " >> " << shift << " =" << endl << endl;
-	outPut_QInt(B >> shift);
-	// END test
+	//int shift = 2;
+	//cout << b << " >> " << shift << " =" << endl << endl;
+	//outPut_QInt(B >> shift);
+	//// END test
 
+	ifstream f("input.txt");
+	ofstream g("output.txt");
+	ReadAndWriteFile(f, g);
+	g.close();
+	f.close();
+	cout << "Da Chay Xong" << endl;
 	_getch();
 	return 0;
 }
