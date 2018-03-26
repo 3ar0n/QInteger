@@ -1,13 +1,13 @@
 ﻿#include "Convert.h"
 
-//Lấy giá trị của bit tương ứng trên ô nhớ
+// Lấy giá trị của bit tương ứng
 bool getBit(unsigned char byte, int position)
 {
 	//dịch phải rồi and với bit 1
 	return (byte >> position) & 0x1;
 }
 
-//Chuyển dãy bit từ dạng chuỗi => dạng luận lý
+// Chuyển dãy bit từ dạng chuỗi "string" => dạng luận lý
 bool* BinStringToBool(string s)
 {
 	bool* BIN = new bool[Base * Byte];  // 16 x 1 byte = Số lớn 16 bytes
@@ -29,7 +29,44 @@ bool* BinStringToBool(string s)
 	return BIN;
 }
 
-//Chữ số thập phân => ký tự thập lục phân
+// Loại bỏ các số 0 đằng trước trong chuỗi BIN (đồng thời chuyển từ kiểu bool* sang string)
+string ClearZero(bool* s)
+{
+	string result = "";
+	int i = 0;
+	while (s[i] == false)
+	{
+		i++;
+	}
+	while (i < Base * 8)
+	{
+		if (s[i] == true)
+			result = result + '1';
+		else
+			result = result + '0';
+		i++;
+	}
+	return result;
+}
+
+// Loại bỏ các số 0 đằng trước trong chuỗi HEX (đồng thời chuyển từ kiểu char* sang string)
+string ClearZero(char* s)
+{
+	string result = "";
+	int i = 0;
+	while (s[i] == '0')
+	{
+		i++;
+	}
+	while (i < Base * 2)
+	{
+		result = result + s[i];
+		i++;
+	}
+	return result;
+}
+
+// Chữ số thập phân => ký tự thập lục phân
 char NumberToHex(int n)
 {
 	char ch;
@@ -49,7 +86,7 @@ char NumberToHex(int n)
 	return ch;
 }
 
-//Ký tự thập lục phân => chứ số thập phân
+// Ký tự thập lục phân => chứ số thập phân
 int HexToNumber(char ch)
 {
 	int n;
@@ -69,34 +106,49 @@ int HexToNumber(char ch)
 	return n;
 }
 
-//Phép lấy bù 2 của 1 số nguyên khác 0
+// Phép lấy bù 2
 QInt Minus(QInt x)
 {
-	QInt y;
-	y.overflow = x.overflow;
-	for (int i = 0; i < Base; i++)
+	// kiểm tra giá trị 0
+	int k = 0;
+	while (k < Base)
 	{
-		y.data[i] = ~x.data[i]; //thực hiện đảo toàn bộ 8 bit của 1 byte phần tử)
-	}
-
-	//cộng thêm 1 vào số vừa đảo bit
-	//nếu giá trị tại byte đó = 255 thì đổi giá trị = 0 và cộng 1 cho byte bên trái
-	for (int i = Base - 1; i >= 0; i--)
-	{
-		if (y.data[i] == 255)
-			y.data[i] = 0;
-		else
+		if (x.data[k] != 0)
 		{
-			y.data[i] += 1;
+			k = -1;
 			break;
 		}
+		k++;
 	}
-	return y;
-	// note: ngoại trừ số 0, giá trị byte đầu tiên (chứa bit dấu) sau khi đảo bit luôn < 255
-	// dĩ nhiên nếu là số 0 thì không lấy bù 2
+
+	// nếu x == 0 thì không cần lấy bù 2
+	if (k != -1)	
+		return x;
+	else
+	{
+		QInt y;
+		y.overflow = x.overflow;
+		for (int i = 0; i < Base; i++)
+			y.data[i] = ~x.data[i]; // thực hiện đảo toàn bộ 8 bit của 1 byte phần tử - phép NOT)
+
+		// cộng thêm 1 vào số vừa đảo bit
+		// nếu giá trị tại byte đó = 255 thì đổi giá trị = 0 và cộng 1 cho byte phía trước
+		for (int i = Base - 1; i >= 0; i--)
+		{
+			if (y.data[i] == 255)
+				y.data[i] = 0;
+			else
+			{
+				y.data[i] += 1;
+				break;
+			}
+		}
+		return y;
+		// byte đầu tiên (chứa bit dấu) của 1 số khác 0 sau khi đảo bit luôn <= 255
+	}
 }
 
-//Kiểm tra dấu của chuỗi nhập vào (chuỗi DEC)
+// Kiểm tra dấu của chuỗi DEC
 int CheckSign(string s)
 {
 	for (unsigned int i = 1; i < s.length(); i++)
@@ -114,7 +166,7 @@ int CheckSign(string s)
 	// số không hợp lệ: trả về 0
 }
 
-//Thập phân => cơ số 256 (1Byte - 8bit)
+// Thập phân => cơ số 256 (1Byte - 8bit)
 QInt DecToByte(string s)
 {
 	QInt x;
@@ -175,7 +227,7 @@ QInt DecToByte(string s)
 	return x;
 }
 
-//Nhị phân => cơ số 256
+// Nhị phân => cơ số 256
 QInt BinToByte(bool *bit)
 {
 	QInt x;
@@ -209,7 +261,7 @@ QInt BinToByte(bool *bit)
 	return x;
 }
 
-//Thập lục phân => cơ số 256. Chuỗi HEX phải có số lượng chẵn kí tự (mỗi 2 kí tự chuyển thành 1 byte QInt)
+// Thập lục phân => cơ số 256. Chuỗi HEX phải có số lượng chẵn kí tự (mỗi 2 kí tự chuyển thành 1 byte QInt)
 QInt HexToByte(string s)
 {
 	QInt x;
@@ -240,7 +292,7 @@ QInt HexToByte(string s)
 	return x;
 }
 
-//Cơ số 256 => nhị phân
+// Cơ số 256 => nhị phân
 bool* ByteToBin(QInt x)
 {
 	if (x.overflow)
@@ -262,7 +314,7 @@ bool* ByteToBin(QInt x)
 	}
 }
 
-//Cơ số 256 => thập lục phân
+// Cơ số 256 => thập lục phân
 char* ByteToHex(QInt x)
 {
 	if (x.overflow)
@@ -281,7 +333,7 @@ char* ByteToHex(QInt x)
 	}
 }
 
-//Cơ số 256 => thập phân
+// Cơ số 256 => thập phân
 string ByteToDec(QInt x)
 {
 	string DEC = "";

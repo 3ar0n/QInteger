@@ -1,6 +1,25 @@
-#include "Input_Output.h"
+﻿#include "Input_Output.h"
 
-//doc file
+// Đọc chuỗi (ứng với cơ số), lưu giá trị QInt
+QInt ConvertResult(int source_base, string source_value)
+{
+	QInt result;
+	switch (source_base)
+	{
+	case _Bin:
+		result = BinToByte(BinStringToBool(source_value));
+		break;
+	case _Dec:
+		result = DecToByte(source_value);
+		break;
+	case _Hex:
+		result = HexToByte(source_value);
+		break;
+	}
+	return result;
+}
+
+// Đọc và ghi file
 void ReadAndWriteFile(ifstream& f, ofstream& g)
 {
 	string str;
@@ -13,122 +32,57 @@ void ReadAndWriteFile(ifstream& f, ofstream& g)
 		while (getline(ss, temp, ' '))
 		{
 			ds.push_back(temp);
-			int dem = atoi(ds[0].c_str());
-			if (ds.size() == 4)
+			int dem = atoi(ds[0].c_str());	// Xác định cơ số cần thao tác (BIN, DEC, HEX)	
+
+			if (ds.size() == 4)	// Toán tử 2 ngôi (+ - * / & | ^ >> <<)
 			{
-				if (dem == 2)//cac phep toan voi day 01
+				QInt a = ConvertResult(dem, ds[1]);
+				QInt b, result;
+				int shift;
+
+				/*
+				Trường hợp toán tử >> và <<, tham số thứ 4 là số bit dịch "shift"
+				Các trường hợp còn lại, tham số thứ 4 là giá trị b
+				*/
+				if ((ds[2] == "<<") || (ds[2] == ">>"))
 				{
-					QInt a, b, c;
-					a = BinToByte(BinStringToBool(ds[1]));
-					b = BinToByte(BinStringToBool(ds[3]));
-
-					if (ds[2] == "+")
-						c = a + b;
-					if (ds[2] == "-")
-						c = a - b;
-					if (ds[2] == "*")
-						c = a * b;
-					if (ds[2] == "/")
-						c = a / b;
-					bool* result = ByteToBin(c);
-					for (int i = 0; i < 128; i++)
-						g << result[i];
-					g << endl;
+					shift = atoi(ds[3].c_str());
+					result = OperationResult(ds[2], a, b, shift);
 				}
-				if (dem == 16)
+				else
 				{
-					QInt a, b, c;
-					a = HexToByte(ds[1]);
-
-					b = HexToByte(ds[3]);
-
-					if (ds[2] == "+")
-						c = a + b;
-					if (ds[2] == "-")
-						c = a - b;
-					if (ds[2] == "*")
-						c = a * b;
-					if (ds[2] == "/")
-						c = a / b;
-					char* result = ByteToHex(c);
-					for (int i = 0; i < 32; i++)
-					{
-						g << result[i];
-					}
-					g << endl;
+					b = ConvertResult(dem, ds[3]);
+					result = OperationResult(ds[2], a, b);
 				}
-				if (dem == 10)
-				{
-					QInt a, b;
-					string result;
-					a = DecToByte(ds[1].c_str());
-					int value = atoi(ds[3].c_str());
-					if (ds[2] == "<<")
-					{
-						b = a << value;
-						result = ByteToDec(b);
-					}
-					else if (ds[2] == ">>")
-					{
-						b = a >> value;
-						result = ByteToDec(b);
-					}
 
-					g << result;
-					g << endl;
-				}
+				// Chuyển cơ số và ghi file
+				if (dem == _Bin)
+					g << ClearZero(ByteToBin(result)) << endl;
+				else if (dem == _Hex)
+					g << ClearZero(ByteToHex(result)) << endl;
+				else if (dem == _Dec)
+					g << ByteToDec(result) << endl;
 			}
-
-			//co 4 cai size bang 3
-			if (ds.size() == 3)
+			if (ds.size() == 3)	// Toán tử 1 ngôi (~) hoặc đổi cơ số
 			{
-				if (dem == 2)
-					if (atoi(ds[1].c_str()) == 10)
-					{
-						QInt a;
-						a = BinToByte(BinStringToBool(ds[2]));
-						g << ByteToDec(a);
-						g << endl;
-					}
-				if (dem == 10)
-					if (atoi(ds[1].c_str()) == 2)
-					{
-						QInt a;
-						a = DecToByte(ds[2].c_str());
-						bool* result = ByteToBin(a);
-						for (int i = 0; i < 128; i++)
-							g << result[i];
-						g << endl;
-					}
-				if (dem == 10)
-					if (ds[1].c_str() == "~")
-					{
-						g << endl;
-					}
-				if (dem == 2)
-					if (atoi(ds[1].c_str()) == 16)
-					{
-						QInt a;
-						a = BinToByte(BinStringToBool(ds[2]));
-						char* result = ByteToHex(a);
-						for (int i = 0; i < 32; i++)
-						{
-							g << result[i];
-						}
-						g << endl;
-					}
-				if (dem == 10)
-					if (atoi(ds[1].c_str()) == 16)
-					{
-						QInt a;
-						a = DecToByte(ds[2].c_str());
-						char* result = ByteToHex(a);
-						for (int i = 0; i < 32; i++)
-						{
-							g << result[i];
-						}
-						g << endl;
-					}
+				QInt a = ConvertResult(dem, ds[2]);
+				int dest_base;
+
+				if (ds[1] == "~")
+				{
+					a = ~a;
+					dest_base = dem;
+				}
+				else
+					dest_base = atoi(ds[1].c_str());
+
+				// Chuyển cơ só và ghi file
+				if (dest_base == _Dec)
+					g << ByteToDec(a) << endl;
+				else if (dest_base == _Bin)
+					g << ClearZero(ByteToBin(a)) << endl;
+				else if (dest_base == _Hex)
+					g << ClearZero(ByteToHex(a)) << endl;
 			}
 		}
 	}

@@ -3,33 +3,34 @@
 #include "Operator.h"
 #include "Input_Output.h"
 
-//Hàm xuất (DEC, HEX, BIN)
+// Hàm xuất chuỗi thể hiện (DEC, HEX, BIN) giá trị của số QInt lên màn hình console 
 void outPut_QInt(QInt x)
 {
 	//Thập phân
 	string Dec = ByteToDec(x);
-	cout << "DEC  ";
+	//cout << endl << "DEC  ";
 	cout << Dec << "    " << endl << endl;
 
 	//Thập lục phân
-	char* Hex = ByteToHex(x);
-	cout << "HEX  ";
-	if (Hex)
-	{
-		for (int i = 0; i < 32; i++)
-		{
-			if (i % 4 == 0 && i > 0)
-				cout << " ";
-			cout << Hex[i];
-		}
-		delete[] Hex;
-	}
-	else
-		cout << "overflow";
+	//char* Hex = ByteToHex(x);
+	//cout << "HEX  ";
+	//if (Hex)
+	//{
+	//	for (int i = 0; i < 32; i++)
+	//	{
+	//		if (i % 4 == 0 && i > 0)
+	//			cout << " ";
+	//		cout << Hex[i];
+	//	}
+	//	delete[] Hex;
+	//}
+	//else
+	//	cout << "overflow";
+	//cout << endl;
 
 	//Nhị phân
 	bool* Bin = ByteToBin(x);
-	cout << endl << endl << "BIN  ";
+	cout << "BIN  ";
 	if (Bin)
 	{
 		for (int i = 0; i < 128; i++)
@@ -42,35 +43,91 @@ void outPut_QInt(QInt x)
 	}
 	else
 		cout << "overflow";
-	cout << endl << endl << endl;
+	cout << endl << endl;
 }
 
 // Xử lý theo tham số dòng lệnh cmd
 int main(int argc, char **argv)
 {
-	//// test giá trị (giả sử chuỗi nhập vào và các phép tính đều hợp lệ - không cần kiểm tra)
-	//string a = "1234567890";
-	//string b = "-123456789";
+	// test các phép toán và xuất ra màn hình console
+	//string a = "0";
+	//string b = "-1";
 	//QInt A = DecToByte(a);
 	//QInt B = DecToByte(b);
 
-	//cout << "a = " << a << endl << endl;
+	//cout << "a = ";
 	//outPut_QInt(A);
 
-	//cout << "b = " << b << endl << endl;
+	//cout << "b = ";
 	//outPut_QInt(B);
 
-	//int shift = 2;
-	//cout << b << " >> " << shift << " =" << endl << endl;
-	//outPut_QInt(B >> shift);
-	//// END test
+	//cout << a << " + " << b << " = ";
+	//outPut_QInt(A + B);
+	//cout << a << " - " << b << " = ";
+	//outPut_QInt(A - B);
+	//cout << a << " * " << b << " = ";
+	//outPut_QInt(A * B);
+	//cout << a << " / " << b << " = ";
+	//outPut_QInt(A / B);
 
-	ifstream f("input.txt");
-	ofstream g("output.txt");
-	ReadAndWriteFile(f, g);
-	g.close();
-	f.close();
-	cout << "Da Chay Xong" << endl;
-	_getch();
+	//int shift = 3;
+	//cout << b << " << " << shift << " = ";
+	//outPut_QInt(B << shift);
+	//cout << b << " >> " << shift << " = ";
+	//outPut_QInt(B >> shift);
+
+	//cout << a << " & " << b << " = ";
+	//outPut_QInt(A & B);
+	//cout << a << " | " << b << " = ";
+	//outPut_QInt(A | B);
+	//cout << a << " ^ " << b << " = ";
+	//outPut_QInt(A ^ B);
+	//cout << " ~ " << b << " = ";
+	//outPut_QInt(~ B);
+	// END test
+
+	// test không dùng tham số dòng lệnh
+	//ifstream f("input.txt");
+	//ofstream g("output.txt");
+	//if (f)
+	//{
+	//	ReadAndWriteFile(f, g);
+	//	f.close();
+	//	cout << "Da Chay Xong" << endl;
+	//}
+	//else
+	//{
+	//	cout << "Khong tim thay file input" << endl;
+	//}
+	//g.close();
+	// END test
+
+	//_getch();
+
+	if (argc != 3)
+	{
+		cout << "Nhap sai cu phap" << endl;
+	}
+	else
+	{
+		ifstream f(argv[1]);
+		ofstream g(argv[2]);
+		if (f && g)
+		{
+			ReadAndWriteFile(f, g);
+			f.close();
+			g.close();
+			cout << "Da chay xong" << endl;
+		}
+		else
+		{
+			cout << "Nhap sai cu phap hoac khong tim thay input" << endl;
+			if (f)
+				f.close();
+			if (g)
+				g.close();
+		}
+		
+	}
 	return 0;
 }
