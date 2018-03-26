@@ -38,13 +38,20 @@ string ClearZero(bool* s)
 	{
 		i++;
 	}
-	while (i < Base * 8)
+	if (i == Base * 8)
 	{
-		if (s[i] == true)
-			result = result + '1';
-		else
-			result = result + '0';
-		i++;
+		result = "0";
+	}
+	else
+	{
+		while (i < Base * 8)
+		{
+			if (s[i] == true)
+				result = result + '1';
+			else
+				result = result + '0';
+			i++;
+		}
 	}
 	return result;
 }
@@ -58,10 +65,15 @@ string ClearZero(char* s)
 	{
 		i++;
 	}
-	while (i < Base * 2)
+	if (i == Base * 2)
+		result = "0";
+	else
 	{
-		result = result + s[i];
-		i++;
+		while (i < Base * 2)
+		{
+			result = result + s[i];
+			i++;
+		}
 	}
 	return result;
 }
@@ -109,43 +121,48 @@ int HexToNumber(char ch)
 // Phép lấy bù 2
 QInt Minus(QInt x)
 {
-	// kiểm tra giá trị 0
-	int k = 0;
-	while (k < Base)
+	if (x.overflow == false)
 	{
-		if (x.data[k] != 0)
+		// kiểm tra giá trị 0
+		int k = 0;
+		while (k < Base)
 		{
-			k = -1;
-			break;
-		}
-		k++;
-	}
-
-	// nếu x == 0 thì không cần lấy bù 2
-	if (k != -1)	
-		return x;
-	else
-	{
-		QInt y;
-		y.overflow = x.overflow;
-		for (int i = 0; i < Base; i++)
-			y.data[i] = ~x.data[i]; // thực hiện đảo toàn bộ 8 bit của 1 byte phần tử - phép NOT)
-
-		// cộng thêm 1 vào số vừa đảo bit
-		// nếu giá trị tại byte đó = 255 thì đổi giá trị = 0 và cộng 1 cho byte phía trước
-		for (int i = Base - 1; i >= 0; i--)
-		{
-			if (y.data[i] == 255)
-				y.data[i] = 0;
-			else
+			if (x.data[k] != 0)
 			{
-				y.data[i] += 1;
+				k = -1;
 				break;
 			}
+			k++;
 		}
-		return y;
-		// byte đầu tiên (chứa bit dấu) của 1 số khác 0 sau khi đảo bit luôn <= 255
+
+		// nếu x == 0 thì không cần lấy bù 2
+		if (k != -1)
+			return x;
+		else
+		{
+			QInt y;
+			y.overflow = false;
+			for (int i = 0; i < Base; i++)
+				y.data[i] = ~x.data[i]; // thực hiện đảo toàn bộ 8 bit của 1 byte phần tử - phép NOT)
+
+										// cộng thêm 1 vào số vừa đảo bit
+										// nếu giá trị tại byte đó = 255 thì đổi giá trị = 0 và cộng 1 cho byte phía trước
+			for (int i = Base - 1; i >= 0; i--)
+			{
+				if (y.data[i] == 255)
+					y.data[i] = 0;
+				else
+				{
+					y.data[i] += 1;
+					break;
+				}
+			}
+			return y;
+			// byte đầu tiên (chứa bit dấu) của 1 số khác 0 sau khi đảo bit luôn <= 255
+		}
 	}
+	else
+		return x;
 }
 
 // Kiểm tra dấu của chuỗi DEC
@@ -167,7 +184,7 @@ int CheckSign(string s)
 }
 
 // Thập phân => cơ số 256 (1Byte - 8bit)
-QInt DecToByte(string s)
+QInt DecToQInt(string s)
 {
 	QInt x;
 	x.overflow = false;
@@ -189,7 +206,22 @@ QInt DecToByte(string s)
 		}
 		if (DEC[0] == '0')
 			isZero = true;
-		// Chuỗi DEC cần chuyển sang QInt có giá trị dương, sau khi chuyển sẽ bù 2 nếu giá trị ban đầu là âm
+		else
+		{
+			// Giảm giá trị chuỗi DEC đi 1 đơn vị
+			for (int i = DEC.length() - 1; i >= 0; i--)
+			{
+				if (DEC[i] > '0') {
+					DEC[i] = DEC[i] - 1;
+					break;
+				}
+				else {
+					DEC[i] = '0';
+					if (i == 0)
+						DEC.erase(0, 1);
+				}
+			}
+		}
 	}
 
 	// Thực hiện chuyển cơ số, bằng cách chia (lần lượt từng phần nhỏ của chuỗi DEC cho 256)
@@ -222,13 +254,17 @@ QInt DecToByte(string s)
 		j++;
 	} while (DEC.length() != 0);
 
+	// Lấy bù 1 nếu là số âm (do chuỗi DEC đã -1)
 	if (Sign == -1 && !isZero)
-		x = Minus(x);
+	{
+		for (int i = 0; i < Base; i++)
+			x.data[i] = ~x.data[i];
+	}
 	return x;
 }
 
 // Nhị phân => cơ số 256
-QInt BinToByte(bool *bit)
+QInt BinToQInt(bool *bit)
 {
 	QInt x;
 	x.overflow = false;
@@ -262,7 +298,7 @@ QInt BinToByte(bool *bit)
 }
 
 // Thập lục phân => cơ số 256. Chuỗi HEX phải có số lượng chẵn kí tự (mỗi 2 kí tự chuyển thành 1 byte QInt)
-QInt HexToByte(string s)
+QInt HexToQInt(string s)
 {
 	QInt x;
 	x.overflow = false;
@@ -293,13 +329,12 @@ QInt HexToByte(string s)
 }
 
 // Cơ số 256 => nhị phân
-bool* ByteToBin(QInt x)
+bool* QIntToBin(QInt x)
 {
-	if (x.overflow)
-		return NULL;
-	else
+	bool* BIN = NULL;
+	if (!x.overflow)
 	{
-		bool* BIN = new bool[Base * Byte];
+		BIN = new bool[Base * Byte];
 		int k = 0;
 
 		for (int i = 0; i < Base; i++)
@@ -310,12 +345,12 @@ bool* ByteToBin(QInt x)
 				k++;
 			}
 		}
-		return BIN;
 	}
+	return BIN;
 }
 
 // Cơ số 256 => thập lục phân
-char* ByteToHex(QInt x)
+char* QIntToHex(QInt x)
 {
 	if (x.overflow)
 		return NULL;
@@ -334,7 +369,7 @@ char* ByteToHex(QInt x)
 }
 
 // Cơ số 256 => thập phân
-string ByteToDec(QInt x)
+string QIntToDec(QInt x)
 {
 	string DEC = "";
 	int Sign = 0;
@@ -429,6 +464,8 @@ string ByteToDec(QInt x)
 		}
 		if (Sign == -1)
 			DEC = "-" + DEC;
+		if (DEC == "")
+			DEC = "0";
 	}
 	return DEC;
 }

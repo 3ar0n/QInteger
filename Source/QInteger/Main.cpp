@@ -7,7 +7,7 @@
 void outPut_QInt(QInt x)
 {
 	//Thập phân
-	string Dec = ByteToDec(x);
+	string Dec = QIntToDec(x);
 	//cout << endl << "DEC  ";
 	cout << Dec << "    " << endl << endl;
 
@@ -29,7 +29,7 @@ void outPut_QInt(QInt x)
 	//cout << endl;
 
 	//Nhị phân
-	bool* Bin = ByteToBin(x);
+	bool* Bin = QIntToBin(x);
 	cout << "BIN  ";
 	if (Bin)
 	{
@@ -100,9 +100,8 @@ int main(int argc, char **argv)
 	//	cout << "Khong tim thay file input" << endl;
 	//}
 	//g.close();
-	// END test
-
 	//_getch();
+	// END test
 
 	if (argc != 3)
 	{
@@ -127,7 +126,6 @@ int main(int argc, char **argv)
 			if (g)
 				g.close();
 		}
-		
 	}
 	return 0;
 }

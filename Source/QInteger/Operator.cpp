@@ -6,7 +6,9 @@ QInt operator + (QInt a, QInt b)
 {
 	QInt c;
 	c.overflow = false;
-	if (!a.overflow && !b.overflow)
+	if (a.overflow || b.overflow)
+		c.overflow = true;
+	else
 	{
 		int tmp = 0; // số nhớ
 		for (int i = Base - 1; i >= 0; i--)
@@ -15,12 +17,12 @@ QInt operator + (QInt a, QInt b)
 			c.data[i] = (a.data[i] + b.data[i] + tmp) % 256;
 			tmp = (a.data[i] + b.data[i] + tmp) / 256;
 		}
+		//if (tmp != 0)
+		//	c.overflow = true;
 		// Kiểm tra tràn số: nếu a, b cùng dấu mà kết quả c trái dấu với a, b thì tràn số
 		if ((a.data[0] <= 127 && b.data[0] <= 127 && c.data[0] > 127) || (a.data[0] > 127 && b.data[0] > 127 && c.data[0] <= 127))
 			c.overflow = true;
 	}
-	else
-		c.overflow = true;
 	return c;
 }
 
@@ -47,11 +49,12 @@ QInt operator * (QInt a, QInt b)
 	bool P, Q = 0x0;
 	for (int j = 0; j < Base * Byte; j++)
 	{
-		P = a.data[Base - 1] & 0x1;
-		if (P == true && Q == false)		// PQ = 10
+		P = getBit(a.data[Base - 1], 0);
+		if (P && !Q)		// PQ = 10
 			D = D - b;
-		else if (P == false && Q == true)	// PQ = 01
+		else if (!P && Q)	// PQ = 01
 			D = D + b;
+		D.overflow = false;
 
 		/* Dịch phải dãy bit [D, a, Q)
 			Q nhận giá trị bit cuối hiện tại của a
@@ -59,14 +62,14 @@ QInt operator * (QInt a, QInt b)
 			Giá trị bit7 = giá trị bit0 của byte phía trước ((unsigned char)1 << 7 == 128)
 			Riêng bit7 của byte đầu tiên sẽ = giá trị bit0 của byte cuối cùng của D
 		*/
-		Q = a.data[Base - 1] & 0x1;
+		Q = getBit(a.data[Base - 1], 0);
 		for (int i = Base - 1; i > 0; i--)	
 		{
 			a.data[i] = a.data[i] >> 1;
-			a.data[i] += (a.data[i - 1] & 0x1) * ((unsigned char)1 << 7);
+			a.data[i] = a.data[i] + (a.data[i - 1] & 0x1) * 128;
 		}
 		a.data[0] = a.data[0] >> 1;
-		a.data[0] += (D.data[Base - 1] & 0x1) * ((unsigned char)1 << 7);
+		a.data[0] = a.data[0] + (D.data[Base - 1] & 0x1) * 128;
 		
 		/* Dịch phải D tương tự như với a
 			Đối với bit7 của byte đầu tiên phải giữ nguyên dấu (trước và sau khi dịch phải giống nhau)
@@ -74,11 +77,11 @@ QInt operator * (QInt a, QInt b)
 		for (int i = Base - 1; i > 0; i--)
 		{
 			D.data[i] = D.data[i] >> 1;
-			D.data[i] += (D.data[i - 1] & 0x1) * ((unsigned char)1 << 7);
+			D.data[i] = D.data[i] + (D.data[i - 1] & 0x1) * 128;
 		}
 		D.data[0] = D.data[0] >> 1;
-		if (D.data[0] > 63)
-			D.data[0] += (unsigned char)1 << 7;
+		if (getBit(D.data[0], 6) == true)
+			D.data[0] = D.data[0] + 128;
 	}
 
 	/* Kiểm tra tràn số
@@ -89,7 +92,7 @@ QInt operator * (QInt a, QInt b)
 	bool theSame = true;
 	while (k < Base)
 	{
-		if ((D.data[0] == 0 || D.data[0] == 255) && (D.data[k] != D.data[0]))
+		if (D.data[k] != D.data[0])
 		{
 			a.overflow = true;
 			theSame = false;
@@ -99,7 +102,7 @@ QInt operator * (QInt a, QInt b)
 	}
 	if (theSame)
 	{
-		if ((D.data[0] == 0 && a.data[0] > 127) || (D.data[0] == 255 && a.data[0] <= 127))
+		if ((D.data[0] == 0 && getBit(a.data[0], 7) == true ) || (D.data[0] == 255 && getBit(a.data[0], 7) == false))
 			a.overflow = true;
 	}
 	return a;
@@ -173,7 +176,6 @@ QInt operator << (QInt a, int shift)
 	/* Để dịch trái số QInt:
 		- dịch trái toàn bộ 16 phần tử (1 byte)
 		- bit7 của byte phía sau trở thành bit0 của byte phía trước
-		- giữ nguyên bit dấu
 	=> dịch trái n bit <=> dịch trái n lần 1 bit
 	*/
 	bool sign = getBit(a.data[0], 7);			// lấy giá trị bit dấu
@@ -190,10 +192,10 @@ QInt operator << (QInt a, int shift)
 			_return = _borrow;
 		}
 	}
-	if (sign == true && a.data[0] <= 127)			// khôi phục giá trị của bit dấu
-		a.data[0] = a.data[0] + 128;
-	else if (sign == false && a.data[0] > 127)
-		a.data[0] = a.data[0] - 128;
+	if (sign == true != getBit(a.data[0], 7))		// kiểm tra tràn số
+		a.overflow = true;
+	else
+		a.overflow = false;
 	return a;
 }
 
@@ -240,6 +242,7 @@ QInt operator & (QInt a, QInt b)
 	return c;
 }
 
+// Toán tử OR
 QInt operator | (QInt a, QInt b)
 {
 	QInt c;
@@ -248,6 +251,8 @@ QInt operator | (QInt a, QInt b)
 		c.data[i] = a.data[i] | b.data[i];
 	return c;
 }
+
+// Toán tử XOR
 QInt operator ^ (QInt a, QInt b)
 {
 	QInt c;
@@ -256,6 +261,8 @@ QInt operator ^ (QInt a, QInt b)
 		c.data[i] = a.data[i] ^ b.data[i];
 	return c;
 }
+
+// Toán tử NOT
 QInt operator ~ (QInt a)
 {
 	for (int i = 0; i < Base; i++)
@@ -267,6 +274,8 @@ QInt operator ~ (QInt a)
 QInt OperationResult(string operation, QInt a, QInt b, int shift)
 {
 	QInt c;
+	c.overflow = false;
+
 	if (operation == "+")
 		c = a + b;
 	else if (operation == "-")

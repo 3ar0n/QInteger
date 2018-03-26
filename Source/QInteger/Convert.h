@@ -11,12 +11,12 @@ int HexToNumber(char ch);							// kí tự thập lục phân -> giá trị th�
 QInt Minus(QInt x);									// Lấy số bù 2
 int CheckSign(string s);							// Kiểm tra số âm/dương (chuỗi DEC)
 		
-QInt DecToByte(string s);							// DEC/BIN/HEX <-> Base256				
-QInt BinToByte(bool *bit);
-QInt HexToByte(string s);
-string ByteToDec(QInt x);
-bool* ByteToBin(QInt x);
-char* ByteToHex(QInt x);
+QInt DecToQInt(string s);							// DEC/BIN/HEX <-> Base256				
+QInt BinToQInt(bool *bit);
+QInt HexToQInt(string s);
+string QIntToDec(QInt x);
+bool* QIntToBin(QInt x);
+char* QIntToHex(QInt x);
 
 /* CÁCH CHUYỂN CƠ SỐ BASE256 -> DEC
 	Số X trình bày ở Base256 có dạng [a0 a1 a2 .... ai] (với a(i) = [0,255] và i = [0,15] )
