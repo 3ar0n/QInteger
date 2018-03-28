@@ -10,7 +10,7 @@
 #include <vector>
 using namespace std;
 
-#define Base (int)16		// Số 16 bytes
+#define ArraySize (int)15
 #define Byte (int)8
 #define _Bin (int)2
 #define _Dec (int)10
@@ -18,6 +18,6 @@ using namespace std;
 
 struct QInt
 {
-	unsigned char data[Base];
-	bool overflow = false;
+	unsigned char data[ArraySize];
+	bool overflow;
 };

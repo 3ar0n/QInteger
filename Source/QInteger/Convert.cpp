@@ -10,11 +10,11 @@ bool getBit(unsigned char byte, int position)
 // Chuyển dãy bit từ dạng chuỗi "string" => dạng luận lý
 bool* BinStringToBool(string s)
 {
-	bool* BIN = new bool[Base * Byte];  // 16 x 1 byte = Số lớn 16 bytes
-	if (s.length() <= Base * Byte)
+	bool* BIN = new bool[ArraySize * Byte];
+	if (s.length() <= ArraySize * Byte)
 	{
 		int i = s.length() - 1;
-		int j = Base * Byte - 1;
+		int j = ArraySize * Byte - 1;
 		// chuyển đổi theo chiều từ phải sang trái
 		do
 		{
@@ -26,6 +26,10 @@ bool* BinStringToBool(string s)
 			i--;
 		} while (j >= 0);
 	}
+	else
+	{
+		return NULL;
+	}
 	return BIN;
 }
 
@@ -33,24 +37,31 @@ bool* BinStringToBool(string s)
 string ClearZero(bool* s)
 {
 	string result = "";
-	int i = 0;
-	while (s[i] == false)
+	if (s == NULL)
 	{
-		i++;
-	}
-	if (i == Base * 8)
-	{
-		result = "0";
+		result = "overflow";
 	}
 	else
 	{
-		while (i < Base * 8)
+		int i = 0;
+		while (s[i] == false)
 		{
-			if (s[i] == true)
-				result = result + '1';
-			else
-				result = result + '0';
 			i++;
+		}
+		if (i == ArraySize * 8)
+		{
+			result = "0";
+		}
+		else
+		{
+			while (i < ArraySize * 8)
+			{
+				if (s[i] == true)
+					result = result + '1';
+				else
+					result = result + '0';
+				i++;
+			}
 		}
 	}
 	return result;
@@ -60,19 +71,26 @@ string ClearZero(bool* s)
 string ClearZero(char* s)
 {
 	string result = "";
-	int i = 0;
-	while (s[i] == '0')
+	if (s == NULL)
 	{
-		i++;
+		result = "overflow";
 	}
-	if (i == Base * 2)
-		result = "0";
 	else
 	{
-		while (i < Base * 2)
+		int i = 0;
+		while (s[i] == '0')
 		{
-			result = result + s[i];
 			i++;
+		}
+		if (i == ArraySize * 2)
+			result = "0";
+		else
+		{
+			while (i < ArraySize * 2)
+			{
+				result = result + s[i];
+				i++;
+			}
 		}
 	}
 	return result;
@@ -121,11 +139,11 @@ int HexToNumber(char ch)
 // Phép lấy bù 2
 QInt Minus(QInt x)
 {
-	if (x.overflow == false)
+	if (!x.overflow)
 	{
 		// kiểm tra giá trị 0
 		int k = 0;
-		while (k < Base)
+		while (k < ArraySize)
 		{
 			if (x.data[k] != 0)
 			{
@@ -142,12 +160,12 @@ QInt Minus(QInt x)
 		{
 			QInt y;
 			y.overflow = false;
-			for (int i = 0; i < Base; i++)
+			for (int i = 0; i < ArraySize; i++)
 				y.data[i] = ~x.data[i]; // thực hiện đảo toàn bộ 8 bit của 1 byte phần tử - phép NOT)
 
 										// cộng thêm 1 vào số vừa đảo bit
 										// nếu giá trị tại byte đó = 255 thì đổi giá trị = 0 và cộng 1 cho byte phía trước
-			for (int i = Base - 1; i >= 0; i--)
+			for (int i = ArraySize - 1; i >= 0; i--)
 			{
 				if (y.data[i] == 255)
 					y.data[i] = 0;
@@ -188,11 +206,10 @@ QInt DecToQInt(string s)
 {
 	QInt x;
 	x.overflow = false;
-	for (int i = 0; i < Base; i++)
+	for (int i = 0; i < ArraySize; i++)
 		x.data[i] = 0;
 
-	unsigned int tmp, mod, i, j = 0;
-	string div, DEC = s;
+	string DEC = s;
 	bool isZero = false;
 
 	//Kiểm tra dấu (và số 0)
@@ -224,6 +241,8 @@ QInt DecToQInt(string s)
 		}
 	}
 
+	unsigned int tmp, mod, i, j = 0;
+	string div = "";
 	// Thực hiện chuyển cơ số, bằng cách chia (lần lượt từng phần nhỏ của chuỗi DEC cho 256)
 	do
 	{
@@ -242,22 +261,24 @@ QInt DecToQInt(string s)
 		}
 		if (div[0] != '0')
 			DEC = div;
-		x.data[Base - 1 - j] = mod;
+		x.data[ArraySize - 1 - j] = mod;
+		j++;
 
 		// Kiểm tra tràn số, giá trị dương nên bit đầu tiên = 0 hay byte đầu tiên < 128
-		if (j == Base - 1)
+		if (j == ArraySize)
 		{
-			if (mod > 127)
+			if ((mod > 127) || (DEC.length() != 0))
+			{
 				x.overflow = true;
-			break;
+				break;
+			}
 		}
-		j++;
 	} while (DEC.length() != 0);
 
 	// Lấy bù 1 nếu là số âm (do chuỗi DEC đã -1)
-	if (Sign == -1 && !isZero)
+	if (!x.overflow && Sign == -1 && !isZero)
 	{
-		for (int i = 0; i < Base; i++)
+		for (int i = 0; i < ArraySize; i++)
 			x.data[i] = ~x.data[i];
 	}
 	return x;
@@ -267,32 +288,38 @@ QInt DecToQInt(string s)
 QInt BinToQInt(bool *bit)
 {
 	QInt x;
-	x.overflow = false;
-	int i, j;
-	for (i = 0; i < Base; i++)
+	if (bit == NULL)
 	{
-		x.data[i] = 0;
+		x.overflow = true;
 	}
-
-	// Thực hiện chuyển từ phải sang trái
-	// k là vị trái trên chuỗi BIN
-	int k = Base * Byte - 1;
-	while (k >= 0)
+	else
 	{
-		// i là vị trí của byte đang thao tác của QInt
-		i = Base - 1;
-		do
+		x.overflow = false;
+		int i, j;
+		for (i = 0; i < ArraySize; i++)
 		{
-			// j là vị trí bit trong byte đang thao tác, j = 0 là vị trí cuối cùng (bit bé nhất)
-			j = 0;
+			x.data[i] = 0;
+		}
+
+		// Thực hiện chuyển từ phải sang trái
+		int k = ArraySize * Byte - 1;
+		while (k >= 0)
+		{
+			// i là vị trí của byte đang thao tác của QInt
+			i = ArraySize - 1;
 			do
 			{
-				x.data[i] += bit[k] * ((unsigned char)1 << j);
-				k--;
-				j++;
-			} while (j < Byte);
-			i--;
-		} while (i >= 0);
+				// j là vị trí bit trong byte đang thao tác, j = 0 là vị trí cuối cùng (bit bé nhất)
+				j = 0;
+				do
+				{
+					x.data[i] += bit[k] * ((unsigned char)1 << j);
+					k--;
+					j++;
+				} while (j < Byte);
+				i--;
+			} while (i >= 0);
+		}
 	}
 	return x;
 }
@@ -302,12 +329,12 @@ QInt HexToQInt(string s)
 {
 	QInt x;
 	x.overflow = false;
-	for (int k = 0; k < Base; k++)
+	for (int k = 0; k < ArraySize; k++)
 		x.data[k] = 0;
 	int i, len = s.length();
 
 	// kiểm tra tràn số
-	if (len > 32)
+	if (len > ArraySize * 2)
 	{
 		x.overflow = true;
 		return x;
@@ -319,7 +346,7 @@ QInt HexToQInt(string s)
 	}
 
 	// chuyển đổi
-	i = Base - 1;
+	i = ArraySize - 1;
 	for (int j = len - 1; j > 0; j = j - 2)
 	{
 		x.data[i] = HexToNumber(s[j - 1]) * 16 + HexToNumber(s[j]);
@@ -334,10 +361,10 @@ bool* QIntToBin(QInt x)
 	bool* BIN = NULL;
 	if (!x.overflow)
 	{
-		BIN = new bool[Base * Byte];
+		BIN = new bool[ArraySize * Byte];
 		int k = 0;
 
-		for (int i = 0; i < Base; i++)
+		for (int i = 0; i < ArraySize; i++)
 		{
 			for (int j = Byte - 1; j >= 0; j--)
 			{
@@ -356,9 +383,9 @@ char* QIntToHex(QInt x)
 		return NULL;
 	else
 	{
-		char* HEX = new char[Base * 2];
+		char* HEX = new char[ArraySize * 2];
 		int k = 0;
-		for (int i = 0; i < Base; i++)
+		for (int i = 0; i < ArraySize; i++)
 		{
 			HEX[k] = NumberToHex(x.data[i] / 16);
 			HEX[k + 1] = NumberToHex(x.data[i] % 16);
@@ -383,10 +410,10 @@ string QIntToDec(QInt x)
 			x = Minus(x);
 		}
 		unsigned int i = 0;
-		while (x.data[i] == 0 && i < Base)
+		while (x.data[i] == 0 && i < ArraySize)
 			i++;
 
-		if (i >= Base)
+		if (i >= ArraySize)
 			DEC = "0";
 		else
 		{
@@ -401,7 +428,7 @@ string QIntToDec(QInt x)
 				tmp = tmp / 10;
 			} while (tmp != 0);
 			i++;
-			while (i < Base)
+			while (i < ArraySize)
 			{
 				//Nhân S_i với 256 => DEC
 				for (int j = s.length() - 1; j >= 0; j--)
